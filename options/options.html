@@ -134,7 +134,90 @@
 
 
             <!-- Detection Section (Hidden) -->
-            <section id="detection-section" class="settings-section" style="display: none;">
+            <section id="detection-section" class="settings-section">
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <h3>Detection Configuration</h3>
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                Update Interval (hours)
+                                <input type="number" id="updateInterval" class="setting-input" min="1" max="168" value="24">
+                            </label>
+                            <p class="setting-description">How often to update detection rules</p>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="setting-label">
+                                URL Allowlist (Regex or URL with wildcards)
+                                <textarea id="urlAllowlist" class="setting-textarea" rows="6" placeholder="Enter URLs or regex patterns, one per line:&#10;&#10;Simple URLs with wildcards:&#10;https://google.com/*&#10;https://*.microsoft.com/*&#10;&#10;Advanced regex patterns:&#10;^https://trusted\.example\.com/.*"></textarea>
+                            </label>
+                            <p class="setting-description">Add URLs or regex patterns to allowlist from detection. Use simple URLs with * wildcards (e.g., https://google.com/*) or advanced regex patterns. These will be added to the exclusion rules without replacing the entire ruleset.</p>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-actions">
+                                <button class="btn btn-secondary" id="refreshDetectionRules">
+                                    <span class="material-icons">refresh</span>
+                                    Update Rules Now
+                                </button>
+                            </div>
+                            <p class="setting-description">Manually update detection rules from the remote source</p>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="config-header">
+                            <h3>Configuration Overview</h3>
+                            <button class="btn btn-secondary small" id="toggleConfigView">
+                                <span class="material-icons">code</span>
+                                Show Raw JSON
+                            </button>
+                        </div>
+                        <div id="configDisplay" class="config-display">
+                            <div class="config-loading">Loading configuration...</div>
+                        </div>
+                        <p class="setting-description">Read-only view of the current detection rules and configuration</p>
+                    </div>
+
+                    <div class="setting-group" id="rulePlaygroundGroup">
+                        <div class="config-header">
+                            <h3>Rule Playground (Beta)</h3>
+                            <button class="btn btn-secondary small" id="loadCurrentRulesBtn" title="Load current cached rules into editor">
+                                <span class="material-icons">download</span>
+                                Load Current
+                            </button>
+                        </div>
+                        <p class="setting-description">Prototype and test detection rules locally. These changes are NOT saved to the extension unless you manually update the rules file.</p>
+                        <div class="playground-grid">
+                            <div class="playground-column">
+                                <label class="setting-label stacked-label">Candidate Rules JSON
+                                    <textarea id="playgroundRulesInput" class="playground-textarea" data-playground-input="true" spellcheck="false" placeholder="Paste a single rule object or an array / partial detection-rules.json fragment..."></textarea>
+                                </label>
+                                <div class="playground-inline-actions">
+                                    <button class="btn btn-secondary" id="validateRulesBtn"><span class="material-icons">check</span> Validate</button>
+                                    <button class="btn btn-secondary" id="sanitizeRulesBtn"><span class="material-icons">cleaning_services</span> Sanitize</button>
+                                    <button class="btn btn-secondary" id="copyRulesBtn"><span class="material-icons">content_copy</span> Copy</button>
+                                </div>
+                            </div>
+                            <div class="playground-column">
+                                <label class="setting-label">Test URL
+                                    <input type="url" id="playgroundTestUrl" class="setting-input" data-playground-input="true" placeholder="https://example.com/phish" />
+                                </label>
+                                <label class="setting-label stacked-label"> Sample HTML (will not fetch live)
+                                    <textarea id="playgroundHtmlInput" class="playground-textarea small" data-playground-input="true" spellcheck="false" placeholder="Paste sample page HTML here to simulate scanning..."></textarea>
+                                </label>
+                                <div class="playground-inline-actions">
+                                    <button class="btn btn-primary" id="runRuleTestBtn"><span class="material-icons">play_arrow</span> Test Rules</button>
+                                    <button class="btn btn-secondary" id="clearPlaygroundBtn"><span class="material-icons">clear</span> Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="playground-results" id="playgroundResults" aria-live="polite">
+                            <div class="playground-placeholder">No test run yet. Paste rules and click Test.</div>
+                        </div>
+                        <p class="setting-description">The playground reuses the same rule matching logic as the content script where possible. Some complex rule types may not be fully simulated.</p>
+                    </div>
+                </div>
             </section>
 
             <!-- Logs Section -->

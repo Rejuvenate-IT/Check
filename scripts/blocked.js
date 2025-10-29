@@ -178,22 +178,33 @@ async function addToAllowlist() {
   console.log("addToAllowlist function called");
 
   try {
-    const blockedUrlElement = document.getElementById("blockedUrl");
-    if (!blockedUrlElement) {
-      console.error("Could not find blocked URL element");
+    let url;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const detailsParam = urlParams.get("details");
+
+    if (detailsParam) {
+      try {
+        const details = JSON.parse(decodeURIComponent(detailsParam));
+        url = details.url;
+        console.log("Got URL from details param:", url);
+      } catch (error) {
+        console.warn("Failed to parse details param:", error);
+      }
+    }
+
+    if (!url) {
+      url = document.referrer;
+      console.log("Using referrer as fallback URL:", url);
+    }
+
+    if (!url || url === "about:blank" || url.includes("chrome-extension://")) {
+      console.error("Could not determine valid blocked URL");
       alert("Error: Could not determine the blocked URL");
       return;
     }
 
-    const defangedUrl = blockedUrlElement.textContent;
-    const url = defangedUrl.replace(/\[\:\]/g, ":");
-
     console.log("Adding URL to allowlist:", url);
-
-    const warningElement = document.getElementById("falsePositiveWarning");
-    if (warningElement) {
-      warningElement.style.display = "block";
-    }
 
     const confirmed = confirm(
       `Are you sure you want to add this site to your allowlist?\n\n${url}\n\nYou will no longer be warned about potential threats on this website.`
@@ -216,7 +227,6 @@ async function addToAllowlist() {
     let urlPattern;
     try {
       const urlObj = new URL(url);
-      // Create a pattern that matches the exact domain
       urlPattern = `^https?://${urlObj.hostname.replace(/\./g, "\\.")}.*`;
     } catch (error) {
       console.error("Error parsing URL:", error);
@@ -224,7 +234,6 @@ async function addToAllowlist() {
       return;
     }
 
-    // Check if pattern already exists
     if (urlAllowlist.includes(urlPattern)) {
       console.log("Pattern already in allowlist");
       alert("This site is already in your allowlist");

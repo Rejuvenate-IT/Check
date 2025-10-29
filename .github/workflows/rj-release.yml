@@ -1,0 +1,185 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+      publish_to_store:
+        description: 'Publish to Chrome Web Store'
+        type: boolean
+        default: false
+
+env:
+  EXTENSION_ID: 'foablhahepllelnfilcngnidflibnhab'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      package-name: ${{ steps.package.outputs.name }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+        fi
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+
+    - name: Update manifest version
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        # Update manifest.json version
+        sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" manifest.json
+        echo "Updated manifest version to $VERSION"
+
+        # Verify the change
+        grep "version" manifest.json
+
+    - name: Disable development mode in options.js
+      run: |
+        # Ensure production build
+        sed -i 's/const DEVELOPMENT_MODE = true/const DEVELOPMENT_MODE = false/g' options/options.js
+        echo "✅ Development mode disabled for production"
+
+    - name: Create extension package
+      id: package
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        PACKAGE_NAME="check-extension-v${VERSION}"
+
+        # Use our existing packaging script logic
+        mkdir -p extension-build
+
+        # Copy only necessary files for store submission
+        cp manifest.json extension-build/
+        cp blocked.html extension-build/
+        cp -r config/ extension-build/
+        cp -r images/ extension-build/
+        cp -r options/ extension-build/
+        cp -r popup/ extension-build/
+        cp -r rules/ extension-build/
+        cp -r scripts/ extension-build/
+        cp -r styles/ extension-build/
+
+        # Remove any development files
+        find extension-build -name "*.md" -delete
+        find extension-build -name "*.log" -delete
+        find extension-build -name ".DS_Store" -delete
+        find extension-build -name "Thumbs.db" -delete
+
+        # Create the zip package
+        cd extension-build
+        zip -r "../${PACKAGE_NAME}.zip" .
+        cd ..
+
+        echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
+        echo "Package created: ${PACKAGE_NAME}.zip"
+
+    - name: Verify package
+      run: |
+        PACKAGE_FILE="${{ steps.package.outputs.name }}.zip"
+
+        if [ ! -f "$PACKAGE_FILE" ]; then
+          echo "❌ Error: Package file not created"
+          exit 1
+        fi
+
+        SIZE=$(ls -lh "$PACKAGE_FILE" | awk '{print $5}')
+        echo "📦 Package size: $SIZE"
+
+        # Verify manifest is valid JSON
+        unzip -p "$PACKAGE_FILE" manifest.json | jq . > /dev/null
+        echo "✅ Manifest JSON is valid"
+
+        echo "📋 Package contents:"
+        unzip -l "$PACKAGE_FILE"
+
+    - name: Upload to Chrome Web Store
+      if: ${{ github.event.inputs.publish_to_store == 'true' || github.event_name == 'push' }}
+      uses: mnao305/chrome-extension-upload@v5.0.0
+      with:
+        file-path: ${{ steps.package.outputs.name }}.zip
+        extension-id: ${{ env.EXTENSION_ID }}
+        client-id: ${{ secrets.CHROME_CLIENT_ID }}
+        client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+        refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        publish: true
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name || format('v{0}', steps.version.outputs.version) }}
+        name: Check v${{ steps.version.outputs.version }}
+        body: |
+          ## 🛡️ Check Extension v${{ steps.version.outputs.version }}
+
+          **Enterprise phishing protection for Microsoft 365**
+
+          ### � Installation Options:
+
+          #### Chrome Web Store (Recommended)
+          - Install directly from: [Chrome Web Store](https://chrome.google.com/webstore/detail/${{ env.EXTENSION_ID }})
+          - Automatic updates and security
+
+          Extension IDs:
+          - Chrome: `${{ env.EXTENSION_ID }}`
+          - Edge: (pending publication)
+
+          ### ✨ Features:
+          - ⚡ Real-time phishing detection for Microsoft 365
+          - 🏢 Enterprise policy support (GPO/Intune)
+          - 🎨 Customizable branding and configuration
+          - 📊 Comprehensive logging and monitoring
+          - 🔒 Modern Manifest V3 architecture
+          - 🌐 Multi-browser support (Chrome, Edge)
+
+          ### 📋 Requirements:
+          - Chrome/Chromium browser (version 88+)
+          - Manifest V3 support
+
+          ### 🔧 Enterprise Configuration:
+          ```bash
+          # Update registry with store extension ID
+          .\Update-StoreIDs.ps1 -ChromeID "${{ env.EXTENSION_ID }}"
+
+          # Deploy policies
+          cd enterprise
+          .\Deploy-ADMX.ps1
+          ```
+
+          ---
+          **Built by CyberDrain** | Released $(date '+%Y-%m-%d %H:%M UTC')
+        files: |
+          ${{ steps.package.outputs.name }}.zip
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: extension-v${{ steps.version.outputs.version }}
+        path: ${{ steps.package.outputs.name }}.zip
+        retention-days: 90

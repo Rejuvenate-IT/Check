@@ -868,15 +868,21 @@ class CheckOptions {
     }
 
     // UI settings
-    this.elements.showNotifications.checked = this.config?.showNotifications;
-    this.elements.enableValidPageBadge.checked =
-      this.config.enableValidPageBadge || false;
+    if (this.elements.showNotifications) {
+      this.elements.showNotifications.checked = this.config?.showNotifications;
+    }
+    if (this.elements.enableValidPageBadge) {
+      this.elements.enableValidPageBadge.checked =
+        this.config.enableValidPageBadge || false;
+    }
 
     // Detection settings
-    this.elements.customRulesUrl.value =
-      this.config?.detectionRules?.customRulesUrl ||
-      this.config?.customRulesUrl ||
-      "";
+    if (this.elements.customRulesUrl) {
+      this.elements.customRulesUrl.value =
+        this.config?.detectionRules?.customRulesUrl ||
+        this.config?.customRulesUrl ||
+        "";
+    }
 
     // URL Allowlist settings
     if (this.elements.urlAllowlist) {
@@ -910,10 +916,14 @@ class CheckOptions {
     }
 
     // Logging settings
-    this.elements.enableDebugLogging.checked =
-      this.config.enableDebugLogging || false;
-    this.elements.enableDeveloperConsoleLogging.checked =
-      this.config.enableDeveloperConsoleLogging || false;
+    if (this.elements.enableDebugLogging) {
+      this.elements.enableDebugLogging.checked =
+        this.config.enableDebugLogging || false;
+    }
+    if (this.elements.enableDeveloperConsoleLogging) {
+      this.elements.enableDeveloperConsoleLogging.checked =
+        this.config.enableDeveloperConsoleLogging || false;
+    }
 
     // Development settings (only visible in dev mode)
     if (this.elements.simulateEnterpriseMode) {

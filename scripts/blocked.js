@@ -470,14 +470,14 @@ async function loadBranding() {
               "Failed to load custom logo, using default Check logo"
             );
             // Fall back to default Check logo
-            customLogo.src = chrome.runtime.getURL("images/icon128.png");
+            customLogo.src = "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png";
             customLogo.style.display = "block";
             defaultIcon.style.display = "none";
           };
         } else {
           console.log("No custom logo configured, using default Check logo");
           // Use default Check logo instead of Unicode icon
-          customLogo.src = chrome.runtime.getURL("images/icon48.png");
+          customLogo.src = "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png";
           customLogo.style.width = "80px";
           customLogo.style.height = "80px";
           customLogo.style.borderRadius = "50%";
@@ -525,24 +525,8 @@ async function loadBranding() {
       return; // Exit early if we loaded from background script
     }
 
-    // Fallback: try to load from branding.json file
-    console.log("No background config available, trying branding.json file");
-    try {
-      const response = await fetch(
-        chrome.runtime.getURL("config/branding.json")
-      );
-      if (response.ok) {
-        const brandingConfig = await response.json();
-        console.log("Loaded branding from file:", brandingConfig);
-
-        const companyName = brandingConfig.companyName || "Check";
-        console.log("Setting company name from file to:", companyName);
-        document.getElementById("companyName").textContent = companyName;
-        document.title = `Access Blocked - ${companyName}`;
-      }
-    } catch (fetchError) {
-      console.warn("Could not load branding.json:", fetchError);
-    }
+    // Fallback: use default hardcoded branding if no background config available
+    console.log("No background config available, using default branding fallback");
   } catch (error) {
     console.error("Could not load branding configuration:", error);
   }

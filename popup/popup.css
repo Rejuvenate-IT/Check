@@ -6,10 +6,10 @@
 /* Theme Variables */
 :root {
   /* Primary Theme Colors */
-  --theme-primary: #F77F00;
-  --theme-primary-hover: #E56F00;
-  --theme-primary-light: rgba(247, 127, 0, 0.1);
-  --theme-primary-dark: #D96800;
+  --theme-primary: #1D3465;
+  --theme-primary-hover: #3A5A8B;
+  --theme-primary-light: rgba(29, 52, 101, 0.1);
+  --theme-primary-dark: #162A52;
 
   /* Secondary Theme Colors */
   --theme-secondary: #005C63;
@@ -20,7 +20,7 @@
   /* Supporting Colors */
   --theme-accent: #005C63;
   --theme-success: #005C63;
-  --theme-warning: #F77F00;
+  --theme-warning: #1D3465;
   --theme-error: #DC2626;
 }
 
@@ -39,7 +39,7 @@
 
   /* Border Colors */
   --theme-border: #E5E7EB;
-  --theme-border-hover: rgba(247, 127, 0, 0.3);
+  --theme-border-hover: rgba(29, 52, 101, 0.3);
 
   /* Shadows */
   --theme-shadow: rgba(0, 0, 0, 0.1);
@@ -60,7 +60,7 @@
 
   /* Border Colors */
   --theme-border: #4B5563;
-  --theme-border-hover: rgba(247, 127, 0, 0.3);
+  --theme-border-hover: rgba(29, 52, 101, 0.3);
 
   /* Shadows */
   --theme-shadow: rgba(0, 0, 0, 0.3);
@@ -82,7 +82,7 @@
 
     /* Border Colors */
     --theme-border: #4B5563;
-    --theme-border-hover: rgba(247, 127, 0, 0.3);
+    --theme-border-hover: rgba(29, 52, 101, 0.3);
 
     /* Shadows */
     --theme-shadow: rgba(0, 0, 0, 0.3);
@@ -104,7 +104,7 @@
 
   /* Border Colors */
   --theme-border: #E5E7EB;
-  --theme-border-hover: rgba(247, 127, 0, 0.3);
+  --theme-border-hover: rgba(29, 52, 101, 0.3);
 
   /* Shadows */
   --theme-shadow: rgba(0, 0, 0, 0.1);
@@ -211,7 +211,7 @@ body {
 }
 
 .header-settings-btn:hover {
-  background: rgba(247, 127, 0, 0.2);
+  background: rgba(29, 52, 101, 0.2);
   border-color: var(--theme-primary);
   transform: translateY(-1px);
 }
@@ -383,13 +383,13 @@ body {
   font-size: 15px;
   min-height: 44px;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(247, 127, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(29, 52, 101, 0.2);
 }
 
 .action-btn.primary:hover {
   background: var(--theme-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(247, 127, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(29, 52, 101, 0.3);
 }
 
 .action-btn.primary.disabled {

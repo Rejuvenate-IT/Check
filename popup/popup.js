@@ -378,10 +378,10 @@ class CheckPopup {
         companyName: "CyberDrain",
         companyURL: "https://cyberdrain.com/",
         productName: "Check",
-        logoUrl: "images/icon32.png",
+        logoUrl: "images/tittle-32-32.png",
         supportUrl: "https://support.cyberdrain.com",
         privacyPolicyUrl: "https://cyberdrain.com/privacy",
-        primaryColor: "#F77F00",
+        primaryColor: "#1D3465",
       };
     } catch (error) {
       console.error("Error loading branding configuration:", error);
@@ -389,10 +389,10 @@ class CheckPopup {
         companyName: "CyberDrain",
         companyURL: "https://cyberdrain.com/",
         productName: "Check",
-        logoUrl: "images/icon32.png",
+        logoUrl: "images/tittle-32-32.png",
         supportUrl: "https://support.cyberdrain.com",
         privacyPolicyUrl: "https://cyberdrain.com/privacy",
-        primaryColor: "#F77F00",
+        primaryColor: "#1D3465",
       };
     }
   }
@@ -422,13 +422,13 @@ class CheckPopup {
       testImg.onerror = () => {
         console.warn("Failed to load custom logo, using default");
         this.elements.brandingLogo.src =
-          chrome.runtime.getURL("images/icon32.png");
+          "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png";
       };
       testImg.src = logoSrc;
     } else {
       console.log("No custom logo, using default");
       this.elements.brandingLogo.src =
-        chrome.runtime.getURL("images/icon32.png");
+        "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png";
     }
 
     // Update company name

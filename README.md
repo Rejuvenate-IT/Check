@@ -1,9 +1,7 @@
-# Check
+# LoginCheck
 
 An open-source, Manifest V3 browser extension for detecting phishing attacks that
 impersonate Microsoft 365 sign-in pages.
-
-Install it from the [Chrome](https://chromewebstore.google.com/detail/benimdeioplgkhanklclahllklceahbe) Store here or the [Edge](https://microsoftedge.microsoft.com/addons/detail/check-by-cyberdrain/knepjpocdagponkonnbggpcnhnaikajg) store here.
 
 ## Features 
 
@@ -22,8 +20,6 @@ Install it from the [Chrome](https://chromewebstore.google.com/detail/benimdeiop
 ## Requirements
 
 - Chrome 88+ or other Chromium-based browsers supporting Manifest V3
-- Optional enterprise management via Group Policy or Microsoft Intune for
-  policy enforcement
 
 ## Installation
 
@@ -32,7 +28,6 @@ Install it from the [Chrome](https://chromewebstore.google.com/detail/benimdeiop
 1. Clone this repository.
 2. In Chrome/Edge open `chrome://extensions/` and enable **Developer mode**.
 3. Click **Load unpacked** and select the project directory.
-4. Verify the extension using `test-extension-loading.html`.
 
 ### Enterprise
 
@@ -43,18 +38,10 @@ mechanism. Managed settings follow the schema in `config/managed_schema.json`.
 
 - **Policies** – see `config/managed_schema.json` for available options such as
   URL blocking, logging, and performance controls.
-- **Branding** – update `config/branding.json` to change names, logos, and
-  colors.
 - **Detection rules** – edit `rules/detection-rules.json` or enable remote
   rules using the `detectionRules` section in the policy schema.
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. The project uses plain
-JavaScript modules and does not include a build system; package the directory
-directly for distribution.
-
 ## License
-
 Licensed under the AGPL-3.0. See [LICENSE](LICENSE) for details.
-
+This software is based on Check by CyberDrain
+Copyright (C) 2025 ProjectX / CyberDrain

@@ -93,17 +93,7 @@ class CheckOptions {
     this.elements.exportLogs = document.getElementById("exportLogs");
     this.elements.logsList = document.getElementById("logsList");
 
-    // Branding
-    this.elements.companyName = document.getElementById("companyName");
-    this.elements.companyURL = document.getElementById("companyURL");
-    this.elements.productName = document.getElementById("productName");
-    this.elements.supportEmail = document.getElementById("supportEmail");
-    this.elements.primaryColor = document.getElementById("primaryColor");
-    this.elements.logoUrl = document.getElementById("logoUrl");
-    this.elements.brandingPreview = document.getElementById("brandingPreview");
-    this.elements.previewLogo = document.getElementById("previewLogo");
-    this.elements.previewTitle = document.getElementById("previewTitle");
-    this.elements.previewButton = document.getElementById("previewButton");
+    // Branding elements removed - no longer user-configurable
 
     // About section
     this.elements.extensionVersion =
@@ -182,20 +172,7 @@ class CheckOptions {
     this.elements.clearPlaygroundBtn?.addEventListener("click", () => this.clearPlayground());
     this.elements.loadCurrentRulesBtn?.addEventListener("click", () => this.loadCurrentRulesIntoPlayground());
 
-    // Branding preview updates
-    const brandingInputs = [
-      this.elements.companyName,
-      this.elements.companyURL,
-      this.elements.productName,
-      this.elements.primaryColor,
-      this.elements.logoUrl,
-    ];
-
-    brandingInputs.forEach((input) => {
-      if (input) {
-        input.addEventListener("input", () => this.updateBrandingPreview());
-      }
-    });
+    // Branding preview functionality removed - no longer user-configurable
 
     // Modal actions
     this.elements.modalCancel?.addEventListener("click", () =>
@@ -266,8 +243,7 @@ class CheckOptions {
       await this.loadLogs();
       // Handle initial hash
       this.handleHashChange();
-      // Update branding preview
-      this.updateBrandingPreview();
+      // Branding preview removed - no longer user-configurable
       this.showToast("Settings loaded successfully", "success");
     } catch (error) {
       console.error("Failed to initialize options page:", error);
@@ -377,7 +353,7 @@ class CheckOptions {
       try {
         // Check if chrome.runtime and extension context are available
         if (chrome.runtime && chrome.runtime.id) {
-          const testUrl = chrome.runtime.getURL("config/branding.json");
+          const testUrl = chrome.runtime.getURL("manifest.json");
           // Validate the URL is properly formed (not undefined or invalid)
           if (
             testUrl &&
@@ -432,23 +408,33 @@ class CheckOptions {
         return;
       }
 
-      // Fallback to default branding if background script fails
+      // Fallback to correct Rejuvenate IT branding if background script fails
       console.warn("Options: Using fallback branding configuration");
-      this.brandingConfig = {
-        companyName: "CyberDrain",
-    companyURL: "https://cyberdrain.com/",
-        productName: "Check",
-        primaryColor: "#F77F00",
-        logoUrl: "images/icon48.png",
-      };
+      try {
+        // Try to import branding directly from branding.js
+        const brandingModule = await import(chrome.runtime.getURL('scripts/branding.js'));
+        this.brandingConfig = brandingModule.getBranding();
+        console.log("Options: Loaded fallback branding from branding.js:", this.brandingConfig);
+      } catch (importError) {
+        console.error("Options: Failed to import branding.js, using hardcoded fallback:", importError);
+        // Final hardcoded fallback with correct Rejuvenate IT branding
+        this.brandingConfig = {
+          companyName: "Rejuvenate IT",
+          companyURL: "https://rejuvenate.it/",
+          productName: "LoginCheck",
+          primaryColor: "#1D3465", // Rejuvenate IT blue, not orange!
+          logoUrl: "images/tittle-48-48.png",
+        };
+      }
     } catch (error) {
       console.error("Error loading branding configuration:", error);
+      // Final error fallback - use correct Rejuvenate IT branding
       this.brandingConfig = {
-        companyName: "CyberDrain",
-		    companyURL: "https://cyberdrain.com/",
-        productName: "Check",
-        primaryColor: "#F77F00",
-        logoUrl: "images/icon48.png",
+        companyName: "Rejuvenate IT",
+        companyURL: "https://rejuvenate.it/",
+        productName: "LoginCheck",
+        primaryColor: "#1D3465", // Rejuvenate IT blue, not orange!
+        logoUrl: "images/tittle-48-48.png",
       };
     }
   }
@@ -844,11 +830,11 @@ class CheckOptions {
 
     // Update sidebar logo
     const sidebarLogo = document.getElementById("sidebarLogo");
-    setLogoSrc(sidebarLogo, chrome.runtime.getURL("images/icon48.png"));
+    setLogoSrc(sidebarLogo, "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png");
 
     // Update mobile logo
     const mobileLogo = document.getElementById("mobileLogo");
-    setLogoSrc(mobileLogo, chrome.runtime.getURL("images/icon48.png"));
+    setLogoSrc(mobileLogo, "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png");
 
     // Apply primary color to the options page
     if (this.brandingConfig?.primaryColor) {
@@ -935,14 +921,7 @@ class CheckOptions {
         this.simulateEnterpriseMode;
     }
 
-    // Branding settings
-    this.elements.companyName.value = this.brandingConfig?.companyName || "";
-    this.elements.companyURL.value = this.brandingConfig?.companyURL || "";
-    this.elements.productName.value = this.brandingConfig?.productName || "";
-    this.elements.supportEmail.value = this.brandingConfig?.supportEmail || "";
-    this.elements.primaryColor.value =
-    this.brandingConfig?.primaryColor || "#F77F00";
-    this.elements.logoUrl.value = this.brandingConfig?.logoUrl || "";
+    // Branding settings removed - no longer user-configurable
   }
 
   switchSection(sectionName) {
@@ -979,9 +958,9 @@ class CheckOptions {
         subtitle: "Customize the extension's appearance and branding",
       },
       about: {
-        title: "About Check, a product by CyberDrain",
+        title: "About LoginCheck",
         subtitle:
-          "Enterprise-grade protection against Microsoft 365 phishing attacks",
+          "Enterprise-grade protection against Microsoft 365 phishing attacks.",
       },
     };
 
@@ -1030,7 +1009,7 @@ class CheckOptions {
   async saveSettings() {
     try {
       const newConfig = this.gatherFormData();
-      const newBranding = this.gatherBrandingData();
+      // Branding data gathering removed - no longer user-configurable
 
       // Validate configuration
       const validation = this.validateConfiguration(newConfig);
@@ -1045,44 +1024,7 @@ class CheckOptions {
         config: newConfig,
       });
 
-      // Save branding configuration separately
-      try {
-        await new Promise((resolve, reject) => {
-          chrome.storage.local.set({ brandingConfig: newBranding }, () => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else {
-              resolve();
-            }
-          });
-        });
-
-        this.brandingConfig = newBranding;
-        console.log("Branding config saved:", newBranding);
-
-        // Notify background script to update branding
-        try {
-          const brandingResponse = await this.sendMessage({
-            type: "UPDATE_BRANDING",
-          });
-
-          if (brandingResponse && brandingResponse.success) {
-            console.log("Background script updated with new branding");
-          } else {
-            console.warn(
-              "Failed to notify background script of branding update"
-            );
-          }
-        } catch (brandingNotifyError) {
-          console.error(
-            "Failed to notify background script:",
-            brandingNotifyError
-          );
-        }
-      } catch (brandingError) {
-        console.error("Failed to save branding config:", brandingError);
-        this.showToast("Failed to save branding settings", "warning");
-      }
+      // Branding saving functionality removed - no longer user-configurable
 
       if (response && response.success) {
         this.config = newConfig;
@@ -1233,16 +1175,7 @@ class CheckOptions {
     }
   }
 
-  gatherBrandingData() {
-    return {
-      companyName: this.elements.companyName.value,
-      companyURL: this.elements.companyURL.value,
-      productName: this.elements.productName.value,
-      supportEmail: this.elements.supportEmail.value,
-      primaryColor: this.elements.primaryColor.value,
-      logoUrl: this.elements.logoUrl.value,
-    };
-  }
+  // gatherBrandingData() method removed - no longer user-configurable
 
   async loadDefaultDetectionRules() {
     try {
@@ -2309,7 +2242,7 @@ class CheckOptions {
       const isDev = !("update_url" in manifestData); // No update_url means unpacked extension
 
       let policies = {};
-      let isManaged = false;
+      let isManaged = false
 
       if (isDev && this.simulateEnterpriseMode) {
         // Mock managed policies for development testing (only when simulate mode is enabled)
@@ -2461,25 +2394,11 @@ class CheckOptions {
   }
 
   disablePolicyManagedFields(policies) {
+    // Only map CIPP fields for policy management
     const policyFieldMap = {
-      showNotifications: this.elements.showNotifications,
-      enableValidPageBadge: this.elements.enableValidPageBadge,
-      enablePageBlocking: this.elements.enablePageBlocking,
       enableCippReporting: this.elements.enableCippReporting,
       cippServerUrl: this.elements.cippServerUrl,
-      cippTenantId: this.elements.cippTenantId,
-      customRulesUrl: this.elements.customRulesUrl,
-      updateInterval: this.elements.updateInterval,
-      urlAllowlist: this.elements.urlAllowlist,
-      enableDebugLogging: this.elements.enableDebugLogging,
-      // Note: enableDeveloperConsoleLogging is excluded - should remain available for debugging
-      // Branding fields (if customBranding policy is present)
-      companyName: this.elements.companyName,
-      companyURL: this.elements.companyURL,
-      productName: this.elements.productName,
-      supportEmail: this.elements.supportEmail,
-      primaryColor: this.elements.primaryColor,
-      logoUrl: this.elements.logoUrl,
+      cippTenantId: this.elements.cippTenantId
     };
 
     Object.keys(policies).forEach((policyKey) => {
@@ -3125,29 +3044,7 @@ class CheckOptions {
     }
   }
 
-  updateBrandingPreview() {
-    const companyName =
-      this.elements.companyName.value || this.brandingConfig.companyName;
-    const companyURL =
-      this.elements.companyURL.value || this.brandingConfig.companyURL;
-    const productName =
-      this.elements.productName.value || this.brandingConfig.productName;
-    const primaryColor =
-      this.elements.primaryColor.value || this.brandingConfig.primaryColor;
-    const logoUrl = this.elements.logoUrl.value || this.brandingConfig.logoUrl;
-
-    this.elements.previewTitle.textContent = productName;
-    this.elements.previewButton.style.backgroundColor = primaryColor;
-
-    if (logoUrl) {
-      this.elements.previewLogo.src = logoUrl.startsWith("http")
-        ? logoUrl
-        : chrome.runtime.getURL(logoUrl);
-    }
-
-    // Apply primary color to the options page interface itself
-    this.applyPrimaryColorToOptionsPage(primaryColor);
-  }
+  // updateBrandingPreview() method removed - no longer user-configurable
 
   applyPrimaryColorToOptionsPage(primaryColor) {
     if (!primaryColor) return;

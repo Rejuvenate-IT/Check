@@ -5,8 +5,8 @@
 
 /* CSS Variables for theming */
 :root {
-  --check-primary-color: #F77F00;
-  --check-primary-hover: #E56F00;
+  --check-primary-color: #1D3465;
+  --check-primary-hover: #3A5A8B;
 }
 
 /* Main notification styles */
@@ -217,9 +217,9 @@
 
 /* Suspicious element highlighting */
 .check-suspicious {
-  outline: 2px dashed #F77F00 !important;
+  outline: 2px dashed #1D3465 !important;
   outline-offset: 2px !important;
-  background-color: rgba(247, 127, 0, 0.1) !important;
+  background-color: rgba(29, 52, 101, 0.1) !important;
 }
 
 .check-hidden {

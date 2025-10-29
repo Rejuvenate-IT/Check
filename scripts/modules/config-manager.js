@@ -1,6 +1,6 @@
 /**
  * Configuration Manager for Check
- * Handles enterprise configuration, branding, and settings management
+ * Handles enterprise configuration and settings management
  */
 
 import logger from "../utils/logger.js";
@@ -8,7 +8,6 @@ import logger from "../utils/logger.js";
 export class ConfigManager {
   constructor() {
     this.config = null;
-    this.brandingConfig = null;
     this.enterpriseConfig = null;
   }
 
@@ -29,14 +28,10 @@ export class ConfigManager {
       // Load local configuration with safe wrapper
       const localConfig = await safe(chrome.storage.local.get(["config"]));
 
-      // Load branding configuration
-      this.brandingConfig = await this.loadBrandingConfig();
-
       // Merge configurations with enterprise taking precedence
       this.config = this.mergeConfigurations(
         localConfig?.config,
-        this.enterpriseConfig,
-        this.brandingConfig
+        this.enterpriseConfig
       );
 
       logger.log("Check: Configuration loaded successfully");
@@ -128,87 +123,27 @@ export class ConfigManager {
     }
   }
 
-  async loadBrandingConfig() {
-    try {
-      // Safe wrapper for chrome.* operations
-      const safe = async (promise) => {
-        try {
-          return await promise;
-        } catch (_) {
-          return null;
-        }
-      };
-
-      // First, try to load user-configured branding from storage
-      const userBranding = await safe(
-        chrome.storage.local.get(["brandingConfig"])
-      );
-
-      if (userBranding && userBranding.brandingConfig) {
-        logger.log("Check: Using user-configured branding from storage");
-        return userBranding.brandingConfig;
-      }
-
-      // Fallback: Load branding configuration from config file with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      try {
-        const response = await fetch(
-          chrome.runtime.getURL("config/branding.json"),
-          { signal: controller.signal }
-        );
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const brandingConfig = await response.json();
-        logger.log("Check: Using branding from config file");
-        return brandingConfig;
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    } catch (error) {
-      logger.log("Check: Using default branding configuration");
-      return this.getDefaultBrandingConfig();
-    }
-  }
-
-  mergeConfigurations(localConfig, enterpriseConfig, brandingConfig) {
+  mergeConfigurations(localConfig, enterpriseConfig) {
     const defaultConfig = this.getDefaultConfig();
 
-    // Handle enterprise custom branding separately
-    let finalBrandingConfig = brandingConfig;
-    if (enterpriseConfig.customBranding) {
-      // Enterprise custom branding takes precedence over file-based branding
-      finalBrandingConfig = {
-        ...brandingConfig,
-        ...enterpriseConfig.customBranding,
-      };
-    }
-
-    // Merge in order of precedence: enterprise > local > branding > default
-    const merged = {
+    // Start with defaults and local config
+    let merged = {
       ...defaultConfig,
-      ...finalBrandingConfig,
       ...localConfig,
-      ...enterpriseConfig,
     };
 
-    // Remove customBranding from the top level since it's been merged into branding
-    if (merged.customBranding) {
-      delete merged.customBranding;
-    }
-
-    // Ensure enterprise policies cannot be overridden
-    if (enterpriseConfig.enforcedPolicies) {
-      merged.enforcedPolicies = enterpriseConfig.enforcedPolicies;
-
-      // Lock configuration options that are enterprise-managed
-      Object.keys(enterpriseConfig.enforcedPolicies).forEach((policy) => {
-        if (enterpriseConfig.enforcedPolicies[policy].locked) {
-          merged[policy] = enterpriseConfig[policy];
-        }
-      });
+    // Handle CIPP settings from enterprise config (highest precedence)
+    if (enterpriseConfig) {
+      // CIPP settings always come from enterprise config if present
+      if (enterpriseConfig.enableCippReporting !== undefined) {
+        merged.enableCippReporting = enterpriseConfig.enableCippReporting;
+      }
+      if (enterpriseConfig.cippServerUrl) {
+        merged.cippServerUrl = enterpriseConfig.cippServerUrl;
+      }
+      if (enterpriseConfig.cippTenantId) {
+        merged.cippTenantId = enterpriseConfig.cippTenantId;
+      }
     }
 
     return merged;
@@ -276,41 +211,6 @@ export class ConfigManager {
     };
   }
 
-  getDefaultBrandingConfig() {
-    return {
-      // Company branding
-      companyName: "Check",
-      productName: "Check",
-      version: "1.0.0",
-
-      // Visual branding
-      primaryColor: "#2563eb",
-      secondaryColor: "#64748b",
-      logoUrl: "images/logo.png",
-      faviconUrl: "images/favicon.ico",
-
-      // Contact information
-      supportEmail: "support@check.com",
-      supportUrl: "https://support.check.com",
-      privacyPolicyUrl: "https://check.com/privacy",
-      termsOfServiceUrl: "https://check.com/terms",
-
-      // Customizable text
-      welcomeMessage:
-        "Welcome to Check - Your Enterprise Web Security Solution",
-      blockedPageTitle: "Access Blocked by Check",
-      blockedPageMessage:
-        "This page has been blocked by your organization's security policy.",
-
-      // Feature customization
-      showCompanyBranding: true,
-
-      // License information
-      licenseKey: "",
-      licensedTo: "",
-      licenseExpiry: null,
-    };
-  }
 
   async setDefaultConfig() {
     try {
@@ -397,37 +297,8 @@ export class ConfigManager {
     return this.config;
   }
 
-  async getBrandingConfig() {
-    if (!this.brandingConfig) {
-      await this.loadConfig();
-    }
-    return this.brandingConfig;
-  }
-
-  async getFinalBrandingConfig() {
-    // Get the enterprise config to check for custom branding
-    if (!this.enterpriseConfig) {
-      await this.loadConfig();
-    }
-
-    // Start with the base branding config
-    let finalBranding = await this.getBrandingConfig();
-
-    // If enterprise has custom branding, merge it in (takes precedence)
-    if (this.enterpriseConfig && this.enterpriseConfig.customBranding) {
-      finalBranding = {
-        ...finalBranding,
-        ...this.enterpriseConfig.customBranding,
-      };
-      logger.log("Check: Applied enterprise custom branding");
-    }
-
-    return finalBranding;
-  }
-
   async refreshConfig() {
     this.config = null;
-    this.brandingConfig = null;
     this.enterpriseConfig = null;
     return await this.loadConfig();
   }
@@ -482,7 +353,6 @@ export class ConfigManager {
     const config = await this.getConfig();
     const exportData = {
       config,
-      branding: this.brandingConfig,
       timestamp: new Date().toISOString(),
       version: chrome.runtime.getManifest().version,
     };
@@ -502,24 +372,67 @@ export class ConfigManager {
       // Update configuration
       await this.updateConfig(importData.config);
 
-      // Update branding if provided with safe wrapper
-      if (importData.branding) {
-        const safe = async (promise) => {
-          try {
-            return await promise;
-          } catch (_) {
-            return undefined;
-          }
-        };
-        await safe(chrome.storage.local.set({ branding: importData.branding }));
-        this.brandingConfig = importData.branding;
-      }
-
       logger.log("Check: Configuration imported successfully");
       return true;
     } catch (error) {
       logger.error("Check: Failed to import configuration:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Get final branding configuration by merging hardcoded branding with managed overrides
+   * This method is called by background script to provide branding to options page
+   */
+  async getFinalBrandingConfig() {
+    try {
+      // Import hardcoded branding from branding.js
+      const brandingModule = await import('../branding.js');
+      const hardcodedBranding = brandingModule.getBranding();
+
+      // Get enterprise configuration for potential branding overrides
+      const enterpriseConfig = await this.loadEnterpriseConfig();
+
+      // Start with hardcoded branding
+      let finalBranding = { ...hardcodedBranding };
+
+      // Apply enterprise branding overrides if present
+      if (enterpriseConfig?.customBranding) {
+        logger.log("ConfigManager: Applying enterprise branding overrides");
+        finalBranding = {
+          ...finalBranding,
+          ...enterpriseConfig.customBranding
+        };
+      }
+
+      logger.log("ConfigManager: Final branding configuration:", {
+        companyName: finalBranding.companyName,
+        productName: finalBranding.productName,
+        primaryColor: finalBranding.primaryColor,
+        source: enterpriseConfig?.customBranding ? 'enterprise-override' : 'hardcoded'
+      });
+
+      return finalBranding;
+    } catch (error) {
+      logger.error("ConfigManager: Failed to get final branding config:", error);
+      
+      // Fallback to hardcoded branding only
+      try {
+        const brandingModule = await import('../branding.js');
+        const fallbackBranding = brandingModule.getBranding();
+        logger.log("ConfigManager: Using hardcoded branding fallback");
+        return fallbackBranding;
+      } catch (fallbackError) {
+        logger.error("ConfigManager: Failed to load fallback branding:", fallbackError);
+        
+        // Final fallback to prevent complete failure
+        return {
+          companyName: "Rejuvenate IT",
+          productName: "LoginCheck",
+          primaryColor: "#1D3465",
+          logoUrl: "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png"
+        };
+      }
     }
   }
 }

@@ -1,0 +1,9 @@
+This software is based on Check by CyberDrain
+Copyright (C) 2025 ProjectX / CyberDrain
+Repo: https://github.com/cyberdrain/check
+Licensed under GNU AGPL v3
+
+Modifications by Rejuvenate IT:
+- Removed whitelabeling functionality
+- Hard Coded Brand and Extension Settings
+- Modified for deployment to our clients browsers

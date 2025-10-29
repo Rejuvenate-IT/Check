@@ -4347,6 +4347,23 @@ if (window.checkExtensionLoaded) {
       const badge = document.createElement("div");
       badge.id = "ms365-valid-badge";
 
+      const dismissBadge = () => {
+        if (badge && badge.parentElement) {
+          badge.remove();
+          if (isMobile) {
+            document.body.style.marginTop = '0';
+          }
+        }
+      };
+
+      const autoDismissTimeout = setTimeout(dismissBadge, 15000);
+
+      badge.style.cursor = 'pointer';
+      badge.addEventListener('click', () => {
+        clearTimeout(autoDismissTimeout);
+        dismissBadge();
+      });
+
       if (isMobile) {
         // Mobile: Banner style
         badge.style.cssText = `
@@ -4357,10 +4374,12 @@ if (window.checkExtensionLoaded) {
         background: linear-gradient(135deg, #4caf50, #2e7d32) !important;
         color: white !important;
         padding: 16px !important;
+        padding-bottom: 20px !important;
         z-index: 2147483646 !important;
         font-family: system-ui, -apple-system, sans-serif !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
         text-align: center !important;
+        cursor: pointer !important;
       `;
 
         badge.innerHTML = `
@@ -4370,7 +4389,7 @@ if (window.checkExtensionLoaded) {
             <strong>Verified Microsoft Domain</strong><br>
             <small>This is an authentic Microsoft login page</small>
           </div>
-          <button onclick="this.parentElement.parentElement.remove(); document.body.style.marginTop = '0';" title="Dismiss" style="
+          <button id="ms365-valid-badge-close-btn" title="Dismiss" style="
             position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
             color: white; padding: 0; border-radius: 4px; cursor: pointer;
@@ -4380,12 +4399,24 @@ if (window.checkExtensionLoaded) {
             font-family: monospace;
           ">×</button>
         </div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.2); overflow: hidden;">
+          <div id="ms365-valid-badge-progress" style="height: 100%; background: rgba(255,255,255,0.5); width: 100%; animation: shrink-progress 15s linear forwards;"></div>
+        </div>
       `;
 
         // Push page content down
         document.body.appendChild(badge);
         const bannerHeight = badge.offsetHeight || 64;
         document.body.style.marginTop = `${bannerHeight}px`;
+
+        const closeBtn = badge.querySelector('#ms365-valid-badge-close-btn');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearTimeout(autoDismissTimeout);
+            dismissBadge();
+          });
+        }
       } else {
         // Desktop: Badge style (original)
         badge.style.cssText = `
@@ -4395,12 +4426,14 @@ if (window.checkExtensionLoaded) {
         background: linear-gradient(135deg, #4caf50, #2e7d32) !important;
         color: white !important;
         padding: 12px 16px !important;
+        padding-bottom: 16px !important;
         border-radius: 8px !important;
         z-index: 2147483646 !important;
         font-family: system-ui, -apple-system, sans-serif !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
         font-size: 14px !important;
         font-weight: 500 !important;
+        cursor: pointer !important;
       `;
 
         badge.innerHTML = `
@@ -4410,14 +4443,28 @@ if (window.checkExtensionLoaded) {
             <span style="font-size: 16px;">✅</span>
             <span>Verified Microsoft Domain</span>
           </div>
-          
+        </div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(255,255,255,0.2); border-radius: 0 0 8px 8px; overflow: hidden;">
+          <div id="ms365-valid-badge-progress" style="height: 100%; background: rgba(255,255,255,0.5); width: 100%; animation: shrink-progress 15s linear forwards;"></div>
         </div>
       `;
 
         document.body.appendChild(badge);
       }
 
-      logger.log("Valid badge displayed");
+      if (!document.getElementById('ms365-valid-badge-animation')) {
+        const style = document.createElement('style');
+        style.id = 'ms365-valid-badge-animation';
+        style.textContent = `
+          @keyframes shrink-progress {
+            from { width: 100%; }
+            to { width: 0%; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      logger.log("Valid badge displayed with auto-dismiss");
     } catch (error) {
       logger.error("Failed to show valid badge:", error.message);
     }

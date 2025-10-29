@@ -174,6 +174,85 @@ function contactAdmin() {
   }
 }
 
+async function addToAllowlist() {
+  console.log("addToAllowlist function called");
+
+  try {
+    const blockedUrlElement = document.getElementById("blockedUrl");
+    if (!blockedUrlElement) {
+      console.error("Could not find blocked URL element");
+      alert("Error: Could not determine the blocked URL");
+      return;
+    }
+
+    const defangedUrl = blockedUrlElement.textContent;
+    const url = defangedUrl.replace(/\[\:\]/g, ":");
+
+    console.log("Adding URL to allowlist:", url);
+
+    const warningElement = document.getElementById("falsePositiveWarning");
+    if (warningElement) {
+      warningElement.style.display = "block";
+    }
+
+    const confirmed = confirm(
+      `Are you sure you want to add this site to your allowlist?\n\n${url}\n\nYou will no longer be warned about potential threats on this website.`
+    );
+
+    if (!confirmed) {
+      console.log("User cancelled allowlist addition");
+      return;
+    }
+
+    const result = await new Promise((resolve) => {
+      chrome.storage.local.get(["config"], (result) => {
+        resolve(result);
+      });
+    });
+
+    const config = result.config || {};
+    const urlAllowlist = config.urlAllowlist || [];
+
+    let urlPattern;
+    try {
+      const urlObj = new URL(url);
+      // Create a pattern that matches the exact domain
+      urlPattern = `^https?://${urlObj.hostname.replace(/\./g, "\\.")}.*`;
+    } catch (error) {
+      console.error("Error parsing URL:", error);
+      alert("Error: Could not parse the blocked URL");
+      return;
+    }
+
+    // Check if pattern already exists
+    if (urlAllowlist.includes(urlPattern)) {
+      console.log("Pattern already in allowlist");
+      alert("This site is already in your allowlist");
+      return;
+    }
+
+    urlAllowlist.push(urlPattern);
+    config.urlAllowlist = urlAllowlist;
+
+    await new Promise((resolve) => {
+      chrome.storage.local.set({ config: config }, () => {
+        resolve();
+      });
+    });
+
+    console.log("Successfully added URL to allowlist:", urlPattern);
+
+    alert(
+      `Successfully added ${new URL(url).hostname} to your allowlist.\n\nYou can now access this site. Redirecting...`
+    );
+
+    window.location.href = url;
+  } catch (error) {
+    console.error("Error adding to allowlist:", error);
+    alert("Error: Could not add site to allowlist. Please try again.");
+  }
+}
+
 function openMailto(supportEmail) {
   const blockedUrl = document.getElementById("blockedUrl").textContent;
   const reason = document.getElementById("blockReason").textContent;
@@ -569,6 +648,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("contactAdminBtn")
     .addEventListener("click", contactAdmin);
+  document
+    .getElementById("addToAllowlistBtn")
+    .addEventListener("click", addToAllowlist);
 
   // Add technical details toggle listener
   const techDetailsHeader = document.querySelector(".technical-details-header");

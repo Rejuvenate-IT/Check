@@ -16,6 +16,7 @@ build/
 *.zip
 *.crx
 *.pem
+release/
 
 # Development files
 .env
@@ -333,3 +334,4 @@ storybook-static/
 
 # End of https://www.gitignore.io/api/node
 .github/copilot-instructions.md
+release/blocked.html

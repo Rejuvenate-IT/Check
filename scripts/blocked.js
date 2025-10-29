@@ -215,13 +215,24 @@ async function addToAllowlist() {
       return;
     }
 
-    const result = await new Promise((resolve) => {
-      chrome.storage.local.get(["config"], (result) => {
-        resolve(result);
+    const configResponse = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: "GET_CONFIG" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Failed to get config:", chrome.runtime.lastError);
+          resolve({ success: false });
+        } else {
+          resolve(response);
+        }
       });
     });
 
-    const config = result.config || {};
+    if (!configResponse.success) {
+      console.error("Failed to get current config");
+      alert("Error: Could not retrieve current configuration. Please try again.");
+      return;
+    }
+
+    const config = configResponse.config || {};
     const urlAllowlist = config.urlAllowlist || [];
 
     let urlPattern;
@@ -241,13 +252,29 @@ async function addToAllowlist() {
     }
 
     urlAllowlist.push(urlPattern);
-    config.urlAllowlist = urlAllowlist;
 
-    await new Promise((resolve) => {
-      chrome.storage.local.set({ config: config }, () => {
-        resolve();
-      });
+    const updateResponse = await new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          type: "UPDATE_CONFIG",
+          config: { urlAllowlist: urlAllowlist }
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Failed to update config:", chrome.runtime.lastError);
+            resolve({ success: false });
+          } else {
+            resolve(response);
+          }
+        }
+      );
     });
+
+    if (!updateResponse.success) {
+      console.error("Failed to update config");
+      alert("Error: Could not save to allowlist. Please try again.");
+      return;
+    }
 
     console.log("Successfully added URL to allowlist:", urlPattern);
 

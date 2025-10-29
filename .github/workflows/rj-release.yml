@@ -126,6 +126,16 @@ jobs:
         refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
         publish: true
 
+    - name: Upload to Edge Web Store
+      if: ${{ github.event.inputs.publish_to_store == 'true' || github.event_name == 'push' }}
+      uses: baptistecdr/release-edge-extension
+      with:
+        api-key: ${{ secrets.EDGE_CLIENT_SECRET }}
+        client-id: ${{ secrets.EDGE_CLIENT_ID }}
+        product-id: ${{ secrets.EDGE_PRODUCT_ID }}
+        product-path: ${{ steps.package.outputs.name }}.zip
+
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:

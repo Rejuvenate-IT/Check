@@ -174,6 +174,121 @@ function contactAdmin() {
   }
 }
 
+async function addToAllowlist() {
+  console.log("addToAllowlist function called");
+
+  try {
+    let url;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const detailsParam = urlParams.get("details");
+
+    if (detailsParam) {
+      try {
+        const details = JSON.parse(decodeURIComponent(detailsParam));
+        url = details.url;
+        console.log("Got URL from details param:", url);
+      } catch (error) {
+        console.warn("Failed to parse details param:", error);
+      }
+    }
+
+    if (!url) {
+      url = document.referrer;
+      console.log("Using referrer as fallback URL:", url);
+    }
+
+    if (!url || url === "about:blank" || url.includes("chrome-extension://")) {
+      console.error("Could not determine valid blocked URL");
+      alert("Error: Could not determine the blocked URL");
+      return;
+    }
+
+    console.log("Adding URL to allowlist:", url);
+
+    const confirmed = confirm(
+      `Are you sure you want to add this site to your allowlist?\n\n${url}\n\nYou will no longer be warned about potential threats on this website.`
+    );
+
+    if (!confirmed) {
+      console.log("User cancelled allowlist addition");
+      return;
+    }
+
+    const configResponse = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: "GET_CONFIG" }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Failed to get config:", chrome.runtime.lastError);
+          resolve({ success: false });
+        } else {
+          resolve(response);
+        }
+      });
+    });
+
+    if (!configResponse.success) {
+      console.error("Failed to get current config");
+      alert("Error: Could not retrieve current configuration. Please try again.");
+      return;
+    }
+
+    const config = configResponse.config || {};
+    const urlAllowlist = config.urlAllowlist || [];
+
+    let urlPattern;
+    try {
+      const urlObj = new URL(url);
+      urlPattern = `^https?://${urlObj.hostname.replace(/\./g, "\\.")}.*`;
+    } catch (error) {
+      console.error("Error parsing URL:", error);
+      alert("Error: Could not parse the blocked URL");
+      return;
+    }
+
+    if (urlAllowlist.includes(urlPattern)) {
+      console.log("Pattern already in allowlist");
+      alert("This site is already in your allowlist");
+      return;
+    }
+
+    urlAllowlist.push(urlPattern);
+
+    const updateResponse = await new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          type: "UPDATE_CONFIG",
+          config: { urlAllowlist: urlAllowlist }
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Failed to update config:", chrome.runtime.lastError);
+            resolve({ success: false });
+          } else {
+            resolve(response);
+          }
+        }
+      );
+    });
+
+    if (!updateResponse.success) {
+      console.error("Failed to update config");
+      alert("Error: Could not save to allowlist. Please try again.");
+      return;
+    }
+
+    console.log("Successfully added URL to allowlist:", urlPattern);
+
+    alert(
+      `Successfully added ${new URL(url).hostname} to your allowlist.\n\nYou can now access this site. Redirecting...`
+    );
+
+    window.location.href = url;
+  } catch (error) {
+    console.error("Error adding to allowlist:", error);
+    alert("Error: Could not add site to allowlist. Please try again.");
+  }
+}
+
 function openMailto(supportEmail) {
   const blockedUrl = document.getElementById("blockedUrl").textContent;
   const reason = document.getElementById("blockReason").textContent;
@@ -569,6 +684,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("contactAdminBtn")
     .addEventListener("click", contactAdmin);
+  document
+    .getElementById("addToAllowlistBtn")
+    .addEventListener("click", addToAllowlist);
 
   // Add technical details toggle listener
   const techDetailsHeader = document.querySelector(".technical-details-header");

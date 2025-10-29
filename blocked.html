@@ -293,7 +293,7 @@
 
       <h1>Access Blocked</h1>
       <p class="subtitle">
-        This website has been blocked by Rejuvenate IT
+        This website has been blocked by Rejuvenate IT LoginCheck
       </p>
 
       <div class="reason">
@@ -304,10 +304,20 @@
         </div>
       </div>
 
+      <div class="reason" id="falsePositiveWarning" style="background: #fffbeb; border: 1px solid #fde68a; margin-bottom: 20px;">
+        <div class="reason-title" style="color: #92400e;">⚠️ False Positive?</div>
+        <div class="reason-text" style="color: #78350f;">
+          If you believe this is a false positive, you can add this site to the allow-list and bypass this screen. You will not be warned about potential threats on this website again. <br>Please proceed with caution.
+        </div>
+      </div>
+
       <div class="actions">
         <button class="btn btn-primary" id="goBackBtn">Go Back</button>
         <button class="btn btn-secondary" id="contactAdminBtn">
           Contact Support Team
+        </button>
+        <button class="btn btn-secondary" id="addToAllowlistBtn" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+          Add to Allowlist
         </button>
       </div>
 

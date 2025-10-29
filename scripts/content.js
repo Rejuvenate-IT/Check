@@ -4389,7 +4389,7 @@ if (window.checkExtensionLoaded) {
             <strong>Verified Microsoft Domain</strong><br>
             <small>This is an authentic Microsoft login page</small>
           </div>
-          <button onclick="event.stopPropagation();" title="Dismiss" style="
+          <button id="ms365-valid-badge-close-btn" title="Dismiss" style="
             position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
             color: white; padding: 0; border-radius: 4px; cursor: pointer;
@@ -4408,6 +4408,15 @@ if (window.checkExtensionLoaded) {
         document.body.appendChild(badge);
         const bannerHeight = badge.offsetHeight || 64;
         document.body.style.marginTop = `${bannerHeight}px`;
+
+        const closeBtn = badge.querySelector('#ms365-valid-badge-close-btn');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearTimeout(autoDismissTimeout);
+            dismissBadge();
+          });
+        }
       } else {
         // Desktop: Badge style (original)
         badge.style.cssText = `

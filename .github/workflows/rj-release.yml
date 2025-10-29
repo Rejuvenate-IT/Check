@@ -128,7 +128,7 @@ jobs:
 
     - name: Upload to Edge Web Store
       if: ${{ github.event.inputs.publish_to_store == 'true' || github.event_name == 'push' }}
-      uses: baptistecdr/release-edge-extension
+      uses: baptistecdr/release-edge-extension@v2
       with:
         api-key: ${{ secrets.EDGE_CLIENT_SECRET }}
         client-id: ${{ secrets.EDGE_CLIENT_ID }}

@@ -1,5 +1,5 @@
 # CyberShield Drain - Git Ignore File
-
+release/
 # Node.js dependencies
 node_modules/
 npm-debug.log*

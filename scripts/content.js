@@ -1743,7 +1743,7 @@ if (window.checkExtensionLoaded) {
         }
       } catch (workerError) {
         logger.warn(
-          "Web Worker processing failed, falling back to main thread:",
+          "Web Worker processing failed (likely due to CSP restrictions), falling back to main thread:",
           workerError.message
         );
       }
@@ -2286,6 +2286,12 @@ if (window.checkExtensionLoaded) {
                   // Skip invalid regex patterns
                 }
               }
+              break;
+
+            case "header":
+              // Header rules cannot be processed in content scripts
+              // as response headers are not accessible in content script context
+              logger.debug(`Skipping header rule "${rule.id}" - headers not accessible in content script`);
               break;
 
             default:
@@ -4082,13 +4088,24 @@ if (window.checkExtensionLoaded) {
       // Set flag to prevent DOM monitoring loops
       showingBanner = true;
 
-      // Fetch branding configuration (uniform pattern: storage only, like applyBrandingColors)
+      // Fetch branding configuration from config manager via background script
       const fetchBranding = () => new Promise((resolve) => {
         try {
-          chrome.storage.local.get(["brandingConfig"], (result) => {
-            resolve(result?.brandingConfig || {});
-          });
-        } catch(_) { resolve({}); }
+          chrome.runtime.sendMessage(
+            { type: "GET_BRANDING_CONFIG" },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.warn("Failed to get branding from background:", chrome.runtime.lastError.message);
+                resolve({});
+              } else {
+                resolve(response?.branding || {});
+              }
+            }
+          );
+        } catch(error) { 
+          console.warn("Error fetching branding:", error);
+          resolve({}); 
+        }
       });
 
       const extractPhishingIndicators = (details) => {
@@ -4152,7 +4169,7 @@ if (window.checkExtensionLoaded) {
           const companyName = branding.companyName || branding.productName || "CyberDrain";
           const supportEmail = branding.supportEmail || "";
           let logoUrl = branding.logoUrl || "";
-          const packagedFallback = chrome.runtime.getURL('images/icon48.png');
+          const packagedFallback = "https://rejuvenateassets.blob.core.windows.net/check-logo/tittle-48-48.png";
           // Simplified: rely on upstream input validation; only fallback when empty/falsy
           if (!logoUrl) {
             logoUrl = packagedFallback;
@@ -4179,7 +4196,7 @@ if (window.checkExtensionLoaded) {
             textWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;';
             const titleSpan = document.createElement('span');
             titleSpan.style.cssText = 'font-size:12px;font-weight:600;';
-            titleSpan.textContent = 'Protected by ' + companyName;
+            titleSpan.textContent = branding.features?.securityBadgeText || ('Protected by ' + companyName);
             textWrap.appendChild(titleSpan);
             if (supportEmail) {
               const contactDiv = document.createElement('div');
@@ -4210,9 +4227,9 @@ if (window.checkExtensionLoaded) {
         : "";
 
       // Determine banner type and styling based on analysis data
-      let bannerTitle = "Suspicious Microsoft 365 Login Page";
+      let bannerTitle = "Suspicious Microsoft 365 Login Page - Contact Rejuvenate IT Support";
       let bannerIcon = "⚠️";
-      let bannerColor = "linear-gradient(135deg, #ff9800, #f57c00)"; // Orange for warnings
+      let bannerColor = "linear-gradient(135deg,rgb(255, 60, 0),rgb(255, 60, 0)"; // Orange for warnings
 
       // Check for scanning state
       if (analysisData?.severity === "scanning") {
@@ -4387,9 +4404,13 @@ if (window.checkExtensionLoaded) {
       `;
 
         badge.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 16px;">✅</span>
-          <span>Verified Microsoft Domain</span>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+        <span style="font-size: 12px; margin-bottom: 4px;">Rejuvenate LoginCheck</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px;">✅</span>
+            <span>Verified Microsoft Domain</span>
+          </div>
+          
         </div>
       `;
 

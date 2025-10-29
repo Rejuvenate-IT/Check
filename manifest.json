@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Check by CyberDrain",
+  "name": "Check by Rejuvenate IT",
   "version": "1.0.5",
   "description": "Protect against phishing attacks targeting Microsoft 365 login pages with enterprise-grade detection",
   "permissions": [
@@ -29,20 +29,20 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Check",
+    "default_title": "LoginCheck",
     "default_icon": {
-      "16": "images/icon16.png",
-      "32": "images/icon32.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
+      "16": "images/tittle-16-16.png",
+      "32": "images/tittle-32-32.png",
+      "48": "images/tittle-48-48.png",
+      "128": "images/tittle-128-128.png"
     }
   },
   "options_page": "options/options.html",
   "icons": {
-    "16": "images/icon16.png",
-    "32": "images/icon32.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
+    "16": "images/tittle-16-16.png",
+    "32": "images/tittle-32-32.png",
+    "48": "images/tittle-48-48.png",
+    "128": "images/tittle-128-128.png"
   },
   "web_accessible_resources": [
     {

@@ -1,24 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "showNotifications": {
-      "title": "Show Notifications",
-      "description": "Display security notifications and warnings",
-      "type": "boolean",
-      "default": true
-    },
-    "enableValidPageBadge": {
-      "title": "Show Valid Page Badge",
-      "description": "Display validation badge on legitimate Microsoft login pages",
-      "type": "boolean",
-      "default": true
-    },
-    "enablePageBlocking": {
-      "title": "Page Blocking Enabled",
-      "description": "Enable blocking of malicious pages",
-      "type": "boolean",
-      "default": true
-    },
     "enableCippReporting": {
       "title": "CIPP Reporting Enabled",
       "description": "Enable reporting to CIPP server",
@@ -37,84 +19,6 @@
       "description": "Tenant identifier to include with CIPP alerts for multi-tenant environments",
       "type": "string",
       "default": ""
-    },
-    "customRulesUrl": {
-      "title": "Custom Rules URL",
-      "description": "URL to fetch custom detection rules from",
-      "type": "string",
-      "format": "uri",
-      "default": ""
-    },
-    "updateInterval": {
-      "title": "Update Interval (hours)",
-      "description": "How often to update detection rules in hours",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 168,
-      "default": 24
-    },
-    "urlAllowlist": {
-      "title": "URL Allowlist (URLs with wildcards or Regex)",
-      "description": "Array of URL patterns or regex patterns to allowlist URLs from detection. Supports simple URLs with * wildcards (e.g., https://google.com/*) or advanced regex patterns.",
-      "type": "array",
-      "items": {
-        "type": "string",
-        "title": "URL Pattern or Regex",
-        "description": "URL with wildcards (e.g., https://google.com/*) or regular expression pattern to match URLs that should be allowlisted"
-      },
-      "default": []
-    },
-    "enableDebugLogging": {
-      "title": "Debug Logging Enabled",
-      "description": "Enable debug logging for troubleshooting",
-      "type": "boolean",
-      "default": false
-    },
-    "customBranding": {
-      "title": "Custom Branding",
-      "description": "Custom branding configuration for white labeling",
-      "type": "object",
-      "properties": {
-        "companyName": {
-          "title": "Company Name",
-          "description": "Company name to display in the extension",
-          "type": "string",
-          "default": ""
-        },
-		"companyURL": {
-          "title": "Company URL",
-          "description": "Company URL used in the extension",
-          "type": "string",
-          "default": "https://cyberdrain.com/"
-        },
-        "productName": {
-          "title": "Product Name",
-          "description": "Custom name for the extension",
-          "type": "string",
-          "default": ""
-        },
-        "supportEmail": {
-          "title": "Support Email",
-          "description": "Email address for user support",
-          "type": "string",
-          "format": "email",
-          "default": ""
-        },
-        "primaryColor": {
-          "title": "Primary Color",
-          "description": "Primary theme color (hex code)",
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
-          "default": "#F77F00"
-        },
-        "logoUrl": {
-          "title": "Logo URL",
-          "description": "URL to company logo",
-          "type": "string",
-          "format": "uri",
-          "default": ""
-        }
-      }
     }
   }
 }

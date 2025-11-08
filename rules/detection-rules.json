@@ -1,7 +1,7 @@
 {
-  "version": "1.0.6",
-  "lastUpdated": "2025-09-08T14:20:00Z",
-  "description": "Phishing detection logic for identifying phishing attempts targeting Microsoft 365 login pages",
+  "version": "1.0.7",
+  "lastUpdated": "2025-11-07T12:30:00Z",
+  "description": "Improved phishing detection rules with reduced false positives",
   "trusted_login_patterns": [
     "^https://login\\.microsoftonline\\.(com|us)$",
     "^https://login\\.microsoft\\.com$",
@@ -35,7 +35,7 @@
     "^https://([^.]+\\.)*live\\.com(/.*)?$"
   ],
   "exclusion_system": {
-    "description": "Centralized exclusion system to prevent false positives on legitimate sites",
+    "description": "EXPANDED exclusion system to prevent false positives on legitimate sites",
     "domain_patterns": [
       "^https://[^/]*\\.cipp\\.app(/.*)?$",
       "^https://(.*\\.)?cyberdrain\\.com(/.*)?$",
@@ -50,20 +50,45 @@
       "^https://[^/]*\\.(youtube|youtu)\\.be(/.*)?$",
       "^https://[^/]*\\.apple\\.com(/.*)?$",
       "^https://[^/]*\\.dynamics\\.com(/.*)?$",
-      "^https://(?:[^/]*\\.)?zoom\\.us(/.*)?$"
+      "^https://(?:[^/]*\\.)?zoom\\.us(/.*)?$",
+      "^https://[^/]*\\.echosign\\.com(/.*)?$",
+      "^https://[^/]*\\.adobesign\\.com(/.*)?$",
+      "^https://[^/]*\\.docusign\\.(com|net)(/.*)?$",
+      "^https://[^/]*\\.jotform\\.(com|io)(/.*)?$",
+      "^https://[^/]*\\.typeform\\.com(/.*)?$",
+      "^https://[^/]*\\.hubspot\\.com(/.*)?$",
+      "^https://[^/]*\\.salesforce\\.com(/.*)?$",
+      "^https://[^/]*\\.zendesk\\.com(/.*)?$",
+      "^https://[^/]*\\.slack\\.com(/.*)?$",
+      "^https://[^/]*\\.atlassian\\.net(/.*)?$",
+      "^https://[^/]*\\.okta\\.com(/.*)?$",
+      "^https://[^/]*\\.onelogin\\.com(/.*)?$"
     ],
     "context_indicators": {
       "description": "Additional context that indicates legitimate discussion vs phishing",
-      "legitimate_contexts": [],
-      "legitimate_sso_patterns": [],
+      "legitimate_contexts": [
+        "sign in with microsoft",
+        "continue with microsoft",
+        "login with microsoft",
+        "authenticate with microsoft",
+        "microsoft sso",
+        "oauth microsoft",
+        ".auth/login/",
+        "azure static web apps",
+        "easy auth",
+        "microsoft integration",
+        "office 365 integration",
+        "connect to microsoft",
+        "sync with microsoft"
+      ],
       "suspicious_contexts": [
         "verify now",
-        "click here",
-        "urgent action",
-        "suspended account",
-        "security alert",
-        "immediate attention",
-        "limited time"
+        "click here immediately",
+        "urgent action required",
+        "account suspended",
+        "security alert verify",
+        "immediate attention required",
+        "limited time offer"
       ]
     }
   },
@@ -203,11 +228,12 @@
     {
       "id": "form_post_not_microsoft",
       "type": "form_action_validation",
-      "description": "Block the page if the credentials are not sent to Microsoft",
+      "description": "Block ONLY if page has Microsoft LOGIN ELEMENTS and credentials are not sent to Microsoft",
       "condition": {
         "form_selector": "form",
         "action_must_not_contain": "login.microsoftonline.com",
-        "has_password_field": true
+        "has_password_field": true,
+        "requires_microsoft_login_elements": true
       },
       "action": "block",
       "severity": "critical"
@@ -456,13 +482,14 @@
     },
     {
       "id": "phi_004",
-      "pattern": "(?:urgent.*(?:action|update|verify)|immediate.*(?:action|attention)|act.*(?:now|immediately)).*(?:microsoft|office|365)",
+      "pattern": "(?:urgent.*(?:action|update|verify).*(?:account|password|credentials)|immediate.*(?:action|attention).*(?:suspended|locked|disabled)).*(?:microsoft|office|365)",
       "flags": "i",
       "severity": "medium",
-      "description": "Urgency tactics targeting Microsoft users",
+      "description": "SPECIFIC urgency tactics targeting Microsoft users with account threats",
       "action": "warn",
       "category": "social_engineering",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "comment": "Made more specific - requires combination of urgency + account threat + Microsoft mention"
     },
     {
       "id": "phi_005",
@@ -496,13 +523,14 @@
     },
     {
       "id": "phi_006",
-      "pattern": "(?=.*(?:microsoft|office|365))(?=.*(?:login|password|signin))(?=.*form.*action)(?!.*login\\.microsoftonline\\.com)(?!.*\\.auth/login/)(?!.*azure\\s+static\\s+web\\s+apps)(?!.*easy\\s+auth)",
+      "pattern": "(?=.*(?:loginfmt|i0116|urlMsaSignUp))(?=.*form.*action)(?!.*login\\.microsoftonline\\.com)(?!.*\\.auth/login/)(?!.*azure\\s+static\\s+web\\s+apps)(?!.*easy\\s+auth)",
       "flags": "i",
       "severity": "high",
-      "description": "Microsoft-branded login form POST URL not pointing to login.microsoftonline.com",
+      "description": "Microsoft LOGIN ELEMENTS detected with form POST not pointing to login.microsoftonline.com",
       "action": "warn",
       "category": "credential_harvesting",
-      "confidence": 0.8
+      "confidence": 0.8,
+      "comment": "Requires ACTUAL Microsoft login elements, not just the word 'microsoft'"
     },
     {
       "id": "phi_010_aad_fingerprint",
@@ -516,58 +544,25 @@
     },
     {
       "id": "phi_011_missing_elements",
-      "pattern": "(?=.*(?:microsoft|office|365))(?=.*(?:type=[\"']password[\"']|method=[\"']post[\"']))(?!.*(?:idPartnerPL|urlMsaSignUp|flowToken))",
+      "pattern": "(?=.*(?:loginfmt|i0116))(?=.*(?:type=[\"']password[\"']|method=[\"']post[\"']))(?!.*(?:idPartnerPL|urlMsaSignUp|flowToken))",
       "flags": "i",
       "severity": "high",
-      "description": "Microsoft branding without required authentication elements",
+      "description": "Microsoft LOGIN ELEMENTS without required authentication elements",
       "action": "warn",
       "category": "incomplete_spoofing",
-      "confidence": 0.85
+      "confidence": 0.85,
+      "comment": "Requires actual login elements, not just branding"
     },
     {
       "id": "phi_013_form_action_mismatch",
-      "pattern": "(?=.*(?:microsoft|office|365))(?=.*(?:password|passwd))(?=.*action=)(?!.*login\\.microsoftonline\\.com)",
+      "pattern": "(?=.*(?:loginfmt|i0116|idSIButton9))(?=.*password)(?=.*action=)(?!.*login\\.microsoftonline\\.com)",
       "flags": "i",
       "severity": "critical",
-      "description": "Microsoft-branded password form with non-Microsoft action URL",
+      "description": "Microsoft LOGIN INTERFACE with password form and non-Microsoft action URL",
       "action": "block",
       "category": "credential_harvesting",
-      "confidence": 0.95
-    },
-    {
-      "id": "phi_014_devtools_blocking",
-      "pattern": "(?:debugger|developer.*tools?|devtools?|F12|inspect.*element|right.*click.*disabled|console.*clear|setInterval.*debugger|while.*true.*debugger|keydown.*F12|contextmenu.*prevent|selectstart.*prevent|dragstart.*prevent|syntaxerror019/HTML-STO|ld\\.min\\.js|lockdown\\.js|_0x[a-f0-9]+.*keyCode|function\\s*_0x[a-f0-9]+.*preventDefault|ctrlKey.*shiftKey.*keyCode.*0x[a-f0-9]+|addEventListener.*keydown.*0x[a-f0-9]+|contextmenu.*preventDefault.*mitigated)",
-      "flags": "i",
-      "severity": "high",
-      "description": "Page attempts to block or detect developer tools usage",
-      "action": "block",
-      "category": "anti_analysis",
-      "confidence": 0.9,
-      "additional_checks": [
-        "document.addEventListener('keydown'",
-        "event.keyCode === 123",
-        "event.which === 123",
-        "debugger;",
-        "setInterval(function(){debugger;}",
-        "while(true){debugger;}",
-        "console.clear()",
-        "addEventListener('contextmenu'",
-        "oncontextmenu=\"return false\"",
-        "onselectstart=\"return false\"",
-        "ondragstart=\"return false\"",
-        "function(_0x",
-        "_0x506b",
-        "keyCode==0x7b",
-        "ctrlKey&&.*shiftKey&&.*keyCode==0x",
-        "preventDefault().*console.*error",
-        "attempt mitigated",
-        "Inspect element attempt mitigated",
-        "Console attempt mitigated",
-        "Right-click attempt mitigated",
-        "antiDebug",
-        "enableSecurityFeatures",
-        "setInterval.*redirect"
-      ]
+      "confidence": 0.95,
+      "comment": "FIXED: Requires actual Microsoft login elements (loginfmt, i0116, idSIButton9), not just the word 'microsoft'"
     },
     {
       "id": "phi_015_code_obfuscation",
@@ -678,13 +673,14 @@
     },
     {
       "id": "phi_017_microsoft_brand_abuse",
-      "pattern": "(?!.*(?:sign\\s+in\\s+with\\s+microsoft|continue\\s+with\\s+microsoft|login\\s+with\\s+microsoft|authenticate\\s+with\\s+microsoft|sso|oauth|third.?party\\s+auth|\\.auth/login/|azure\\s+static\\s+web\\s+apps|easy\\s+auth|discussion|forum|community|tutorial|guide|documentation|support|help|wiki|blog|article|how\\s+to|step\\s+by\\s+step|configure|setup|administration|management))(?:(?:microsoft|office|365).*(?:login|sign.*in|authentication)|(?:login|sign.*in|authentication).*(?:microsoft|office|365))",
+      "pattern": "(?!.*(?:sign\\s+in\\s+with\\s+microsoft|continue\\s+with\\s+microsoft|login\\s+with\\s+microsoft|authenticate\\s+with\\s+microsoft|sso|oauth|third.?party\\s+auth|\\.auth/login/|azure\\s+static\\s+web\\s+apps|easy\\s+auth|discussion|forum|community|tutorial|guide|documentation|support|help|wiki|blog|article|how\\s+to|step\\s+by\\s+step|configure|setup|administration|management|integration|connect|sync))(?=.*(?:loginfmt|i0116|idSIButton9))(?:(?:microsoft|office|365).*(?:login|sign.*in|authentication)|(?:login|sign.*in|authentication).*(?:microsoft|office|365))",
       "flags": "i",
       "severity": "high",
-      "description": "Microsoft branding combined with login/authentication terms on non-Microsoft domain",
+      "description": "Microsoft branding with ACTUAL LOGIN ELEMENTS on non-Microsoft domain",
       "action": "block",
       "category": "brand_abuse",
-      "confidence": 0.95
+      "confidence": 0.95,
+      "comment": "FIXED: Now requires actual login elements AND excludes integrations/documentation"
     }
   ],
   "legitimate_patterns": [
@@ -955,5 +951,20 @@
     "log_matches": true,
     "auto_update": true,
     "fallback_on_error": true
+  },
+  "changelog": {
+    "1.0.7": {
+      "date": "2025-11-07",
+      "changes": [
+        "REMOVED phi_014_devtools_blocking entirely - not a reliable phishing indicator",
+        "FIXED phi_013_form_action_mismatch - now requires actual Microsoft login elements (loginfmt, i0116, idSIButton9), not just the word 'microsoft' or 'office'",
+        "FIXED phi_017_microsoft_brand_abuse - now requires actual login elements AND excludes integrations/documentation/SSO",
+        "FIXED phi_004 - made more specific, requires urgency + account threat + Microsoft mention",
+        "FIXED phi_006 - requires actual Microsoft login elements, not just branding",
+        "FIXED phi_011 - requires actual login elements, not just branding",
+        "EXPANDED exclusion_system domain_patterns - added echosign.com, adobesign.com, docusign, jotform, typeform, hubspot, salesforce, zendesk, slack, atlassian, okta, onelogin",
+        "EXPANDED legitimate_contexts - added integration, connect, sync keywords"
+      ]
+    }
   }
 }
